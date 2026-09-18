@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dースクエア　ログインサポート</title>
+<style>
+  :root{
+    --bg:#f4f6fa;
+    --card:#ffffff;
+    --border:#e2e6ee;
+    --text:#1f2733;
+    --muted:#6b7686;
+    --accent:#2563eb;
+    --accent-hover:#1d4ed8;
+    --ok:#16a34a;
+    --danger:#dc2626;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14161a;
+      --card:#1d2027;
+      --border:#2c313c;
+      --text:#e8ebf0;
+      --muted:#9aa4b2;
+      --accent:#4f8cff;
+      --accent-hover:#7aabff;
+      --ok:#4ade80;
+      --danger:#f87171;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    padding:24px 16px 60px;
+  }
+  .wrap{
+    max-width:520px;
+    margin:0 auto;
+  }
+  h1{
+    font-size:1.25rem;
+    margin:0 0 4px;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:0.85rem;
+    margin:0 0 20px;
+    line-height:1.5;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:16px;
+  }
+  label.field-label{
+    display:block;
+    font-size:0.8rem;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  select{
+    width:100%;
+    padding:12px 14px;
+    font-size:1rem;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+  }
+  .row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .row:last-child{border-bottom:none;}
+  .row .label{
+    width:84px;
+    flex-shrink:0;
+    color:var(--muted);
+    font-size:0.85rem;
+  }
+  .row .value{
+    flex:1;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:1rem;
+    word-break:break-all;
+  }
+  .row .value.masked{
+    letter-spacing:2px;
+  }
+  button.iconbtn{
+    border:none;
+    background:transparent;
+    color:var(--accent);
+    cursor:pointer;
+    padding:6px 8px;
+    font-size:0.85rem;
+    border-radius:8px;
+    white-space:nowrap;
+  }
+  button.iconbtn:hover{background:var(--border);}
+  .actions{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    flex:1;
+    min-width:140px;
+    padding:12px 16px;
+    border-radius:10px;
+    border:none;
+    font-size:0.9rem;
+    cursor:pointer;
+    text-align:center;
+    text-decoration:none;
+    display:inline-block;
+  }
+  .btn-primary{
+    background:var(--accent);
+    color:#fff;
+  }
+  .btn-primary:hover{background:var(--accent-hover);}
+  .btn-secondary{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+  .btn-secondary:hover{border-color:var(--accent);}
+  .empty{
+    color:var(--muted);
+    font-size:0.9rem;
+    text-align:center;
+    padding:20px 0;
+  }
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:24px;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--text);
+    color:var(--bg);
+    padding:10px 18px;
+    border-radius:999px;
+    font-size:0.85rem;
+    opacity:0;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+    pointer-events:none;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+  .notice{
+    font-size:0.75rem;
+    color:var(--muted);
+    background:var(--bg);
+    border:1px dashed var(--border);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-top:18px;
+    line-height:1.5;
+  }
+  .gate{
+    position:fixed;
+    inset:0;
+    background:var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:100;
+  }
+  .gate-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:28px 24px;
+    width:100%;
+    max-width:340px;
+    text-align:center;
+  }
+  .gate-card h2{
+    font-size:1.05rem;
+    margin:0 0 6px;
+  }
+  .gate-card p{
+    font-size:0.8rem;
+    color:var(--muted);
+    margin:0 0 18px;
+  }
+  .gate-card input{
+    width:100%;
+    padding:12px 14px;
+    font-size:1rem;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+    margin-bottom:10px;
+    text-align:center;
+  }
+  .gate-card .btn{
+    width:100%;
+  }
+  .gate-error{
+    color:var(--danger);
+    font-size:0.8rem;
+    min-height:1.2em;
+    margin-bottom:6px;
+  }
+</style>
+</head>
+<body>
+<div class="gate" id="gateScreen">
+  <div class="gate-card">
+    <h2>Dースクエア　ログインサポート</h2>
+    <p>このツールを開くにはパスワードを入力してください。</p>
+    <input type="password" id="gatePassword" placeholder="パスワード" autocomplete="off">
+    <div class="gate-error" id="gateError">&nbsp;</div>
+    <button class="btn btn-primary" id="gateSubmit">開く</button>
+  </div>
+</div>
+<div class="wrap" id="mainWrap" style="display:none;">
+  <h1>Dースクエア　ログインサポート</h1>
+  <p class="sub">店名を選ぶと「加盟店・支店・ユーザーID・パスワード」を表示します。各項目のコピーボタンでコピーし、ログイン画面の対応欄に貼り付けてください。</p>
+
+  <div class="card">
+    <label class="field-label" for="storeSelect">店名を選択</label>
+    <select id="storeSelect">
+      <option value="">-- 店名を選択してください --</option>
+    </select>
+  </div>
+
+  <div class="card" id="resultCard">
+    <div id="emptyState" class="empty">店名を選択すると、ここに各項目が表示されます。</div>
+    <div id="fields" style="display:none;">
+      <div class="row">
+        <div class="label">加盟店</div>
+        <div class="value" id="val-merchant"></div>
+        <button class="iconbtn" data-copy="val-merchant">コピー</button>
+      </div>
+      <div class="row">
+        <div class="label">支店</div>
+        <div class="value" id="val-branch"></div>
+        <button class="iconbtn" data-copy="val-branch">コピー</button>
+      </div>
+      <div class="row">
+        <div class="label">ユーザーID</div>
+        <div class="value" id="val-userid"></div>
+        <button class="iconbtn" data-copy="val-userid">コピー</button>
+      </div>
+      <div class="row">
+        <div class="label">パスワード</div>
+        <div class="value masked" id="val-password"></div>
+        <button class="iconbtn" id="togglePw">表示</button>
+        <button class="iconbtn" data-copy="val-password" data-raw="true">コピー</button>
+      </div>
+    </div>
+    <div class="actions" id="actionButtons" style="display:none;">
+      <a class="btn btn-primary" id="openSite" href="https://capouwebplusdoubleluck.azurewebsites.net/#/" target="_blank" rel="noopener noreferrer">ログイン画面を開く</a>
+    </div>
+  </div>
+
+  <div class="notice">
+    このファイルにはログイン用の認証情報（パスワードを含む）が記載されています。第三者と共有したり、クラウドや公開の場所にアップロードしたりしないでください。お使いのPC内で保管・利用してください。
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  // このツールを開くためのパスワード（簡易的な画面ロックであり、強固な認証ではありません）
+  var GATE_PASSWORD = "Tansuya529";
+  var gateScreen = document.getElementById('gateScreen');
+  var mainWrap = document.getElementById('mainWrap');
+  var gatePassword = document.getElementById('gatePassword');
+  var gateSubmit = document.getElementById('gateSubmit');
+  var gateError = document.getElementById('gateError');
+
+  function tryUnlock(){
+    if(gatePassword.value === GATE_PASSWORD){
+      gateScreen.style.display = 'none';
+      mainWrap.style.display = 'block';
+    } else {
+      gateError.textContent = 'パスワードが違います';
+      gatePassword.value = '';
+      gatePassword.focus();
+    }
+  }
+
+  gateSubmit.addEventListener('click', tryUnlock);
+  gatePassword.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ tryUnlock(); }
+  });
+  gatePassword.focus();
+
+  // 店舗データ（アップロードされた一覧表より）
+  var STORES = [
+    {name:"蒲田",        merchant:"10351", branch:"0003", userid:"00003", password:"Tansuya_529"},
+    {name:"青山",        merchant:"10351", branch:"0005", userid:"00005", password:"Tansuya_529"},
+    {name:"公会堂",      merchant:"10351", branch:"0006", userid:"00006", password:"Tansuya_529"},
+    {name:"中目黒",      merchant:"10351", branch:"0007", userid:"00007", password:"Tansuya_529"},
+    {name:"武蔵小山",    merchant:"10351", branch:"0008", userid:"00008", password:"Tansuya_529"},
+    {name:"立川",        merchant:"10351", branch:"0009", userid:"00009", password:"Tansuya_529"},
+    {name:"本八幡",      merchant:"10351", branch:"0010", userid:"00010", password:"Tansuya_529"},
+    {name:"八千代台",    merchant:"10351", branch:"0011", userid:"00011", password:"Tansuya_529"},
+    {name:"東銀座",      merchant:"10351", branch:"0013", userid:"00013", password:"Tansuya_529"},
+    {name:"銀座",        merchant:"10351", branch:"0014", userid:"00014", password:"Tansuya_529"},
+    {name:"新仲見世",    merchant:"10351", branch:"0015", userid:"00015", password:"Tansuya_529"},
+    {name:"浅草",        merchant:"10351", branch:"0016", userid:"00016", password:"Tansuya_529"},
+    {name:"新宿",        merchant:"10351", branch:"0017", userid:"00017", password:"Tansuya_529"},
+    {name:"神楽坂",      merchant:"10351", branch:"0018", userid:"00018", password:"Tansuya_529"},
+    {name:"伊勢佐木町",  merchant:"10351", branch:"0019", userid:"00019", password:"Tansuya_529"},
+    {name:"津田沼",      merchant:"10351", branch:"0020", userid:"00020", password:"Tansuya_529"},
+    {name:"手仕事屋",    merchant:"10351", branch:"0027", userid:"00027", password:"Tansuya_529"},
+    {name:"MEGA浅草",    merchant:"10351", branch:"0029", userid:"00029", password:"Tansuya_529"},
+    {name:"MEGA羽田",    merchant:"10351", branch:"0030", userid:"00030", password:"Tansuya_529"},
+    {name:"名古屋",      merchant:"10351", branch:"0028", userid:"00028", password:"Tansuya_529"}
+  ];
+
+  var select = document.getElementById('storeSelect');
+  var emptyState = document.getElementById('emptyState');
+  var fields = document.getElementById('fields');
+  var actionButtons = document.getElementById('actionButtons');
+  var pwEl = document.getElementById('val-password');
+  var togglePwBtn = document.getElementById('togglePw');
+  var toast = document.getElementById('toast');
+  var pwVisible = false;
+  var current = null;
+
+  STORES.forEach(function(s){
+    var opt = document.createElement('option');
+    opt.value = s.name;
+    opt.textContent = s.name;
+    select.appendChild(opt);
+  });
+
+  function maskPassword(pw){
+    return '•'.repeat(pw.length);
+  }
+
+  function render(store){
+    current = store;
+    document.getElementById('val-merchant').textContent = store.merchant;
+    document.getElementById('val-branch').textContent = store.branch;
+    document.getElementById('val-userid').textContent = store.userid;
+    pwVisible = false;
+    pwEl.textContent = maskPassword(store.password);
+    pwEl.classList.add('masked');
+    togglePwBtn.textContent = '表示';
+    emptyState.style.display = 'none';
+    fields.style.display = 'block';
+    actionButtons.style.display = 'flex';
+  }
+
+  select.addEventListener('change', function(){
+    var s = STORES.find(function(x){ return x.name === select.value; });
+    if(s){ render(s); }
+    else {
+      current = null;
+      emptyState.style.display = 'block';
+      fields.style.display = 'none';
+      actionButtons.style.display = 'none';
+    }
+  });
+
+  togglePwBtn.addEventListener('click', function(){
+    if(!current) return;
+    pwVisible = !pwVisible;
+    if(pwVisible){
+      pwEl.textContent = current.password;
+      pwEl.classList.remove('masked');
+      togglePwBtn.textContent = '隠す';
+    } else {
+      pwEl.textContent = maskPassword(current.password);
+      pwEl.classList.add('masked');
+      togglePwBtn.textContent = '表示';
+    }
+  });
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 1400);
+  }
+
+  function copyText(text, label){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        showToast(label + 'をコピーしました');
+      }).catch(function(){
+        fallbackCopy(text, label);
+      });
+    } else {
+      fallbackCopy(text, label);
+    }
+  }
+
+  function fallbackCopy(text, label){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); showToast(label + 'をコピーしました'); }
+    catch(e){ showToast('コピーに失敗しました'); }
+    document.body.removeChild(ta);
+  }
+
+  document.querySelectorAll('[data-copy]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      if(!current) return;
+      var targetId = btn.getAttribute('data-copy');
+      var label, text;
+      switch(targetId){
+        case 'val-merchant': label='加盟店'; text=current.merchant; break;
+        case 'val-branch': label='支店'; text=current.branch; break;
+        case 'val-userid': label='ユーザーID'; text=current.userid; break;
+        case 'val-password': label='パスワード'; text=current.password; break;
+      }
+      copyText(text, label);
+    });
+  });
+})();
+</script>
+</body>
+</html>
